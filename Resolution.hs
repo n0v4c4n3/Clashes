@@ -48,18 +48,16 @@ cnf2CSet :: F -> CSet
 cnf2CSet (Atom v)     = [[LP v]]
 cnf2CSet (Neg (Atom v)) = [[LN v]]
 cnf2CSet (a `Conj` b) = (cnf2CSet a) ++ (cnf2CSet b)
-cnf2CSet (a `Disy` b) = (aux a) : [(aux b)]
+cnf2CSet (a `Disy` b) = (f2ArrayL a) : [(f2ArrayL b)]
 
-aux :: F -> [L]
-aux (Atom v) = [LP v]
-aux (Neg (Atom v)) = [LN v]
-aux (a `Disy` b) = (aux a) ++ (aux b)
+f2ArrayL :: F -> [L]
+f2ArrayL (Atom v) = [LP v]
+f2ArrayL (Neg (Atom v)) = [LN v]
+f2ArrayL (a `Disy` b) = removeDupes((aux a) ++ (aux b))
 
-lim :: [L] -> [L]
-lim (x:y:xs) = x : lim (filter (== x) y:xs)
-
---lim :: [C] -> [C]
---lim = 
+removeDupes :: (Eq a) => [a] -> [a]
+removeDupes (x:xs) = x : removeDupes (filter (/= x) xs)
+removeDupes [] = [] 
 
 --  ((Atom "p") `Disy` ((Atom "q") `Disy` (Atom "r")))
 -- Pos: convierte una formula a FNC

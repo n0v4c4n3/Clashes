@@ -1,6 +1,6 @@
 
 module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) where
-
+import Data.List
 -----------------------------------------
 -- Tipos de datos
 -----------------------------------------
@@ -25,7 +25,7 @@ type Clash = (C,L,C,L)
 -----------------------------------------
 -- Pos: retorna True si la formula es SAT, o False si es UNSAT
 sat :: F -> Bool
-sat = undefined
+sat f = undefined
 
 -- Pos: retorna True si la formula es Tautología, o False en caso contrario
 tau :: F -> Bool
@@ -48,12 +48,12 @@ cnf2CSet :: F -> CSet
 cnf2CSet (Atom v)     = [[LP v]]
 cnf2CSet (Neg (Atom v)) = [[LN v]]
 cnf2CSet (a `Conj` b) = (cnf2CSet a) ++ (cnf2CSet b)
-cnf2CSet (a `Disy` b) = (f2ArrayL a) : [(f2ArrayL b)]
+cnf2CSet (a `Disy` b) = [removeDupes ((f2ArrayL a) ++ (f2ArrayL b))]
 
 f2ArrayL :: F -> [L]
 f2ArrayL (Atom v) = [LP v]
 f2ArrayL (Neg (Atom v)) = [LN v]
-f2ArrayL (a `Disy` b) = removeDupes((aux a) ++ (aux b))
+f2ArrayL (a `Disy` b) = (f2ArrayL a) ++ (f2ArrayL b)
 
 removeDupes :: (Eq a) => [a] -> [a]
 removeDupes (x:xs) = x : removeDupes (filter (/= x) xs)
@@ -97,13 +97,23 @@ distr a            = a
 -- Pos: si es SAT,   retorna el conjunto de clausulas saturado
 --      si es UNSAT, retorna un conjunto de clausulas incluyendo la clausula vacía
 resolveCSet :: CSet -> CSet
-resolveCSet = undefined
-               
+resolveCSet [] = []
+--resolveCSet (c1:c2:cs) = resolveClash(hasClash c1 c2) : resolveCSet cs
+
+hasClash :: C -> C -> L
+hasClash (l1:l1s) (l2:l2s) = case (or ( map (== (opuesto l1)) (l2:l2s))) of { True -> l1 ;    
+                                                                        False -> hasClash (l1s) (l2:l2s)}
+hasClash [] ls = LP ""
+
+opuesto :: L -> L 
+opuesto (LP v) = LN v
+opuesto (LN v) = LP v
+
 -- Pos: retorna la resolvente de un conflicto
 resolveClash :: Clash -> C
-resolveClash = undefined
+resolveClash (c1, l1, c2, l2) = removeDupes ((delete l1 c1) ++ (delete l2 c2))
 
-
+-- resolveClash ([LP "p" , LP "q"] , (LP "p") , [LP "q" , LN "p"] , (LN "p") )
 ----------------------------------------------------------------------------------
 -- Pretty Printing
 instance Show F where
@@ -116,5 +126,5 @@ instance Show F where
   show (a `Imp` b)    = "(" ++ show a ++ ") --> (" ++ show b ++ ")"
   
 instance Show L where  
-  show (LP v)  = "~" ++ v
-  show (LN v)  = v  
+  show (LP v)  = v
+  show (LN v)  = "~" ++ v  

@@ -1,5 +1,5 @@
-
 module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) where
+import Data.List
 
 -----------------------------------------
 -- Tipos de datos
@@ -48,16 +48,18 @@ cnf2CSet :: F -> CSet
 cnf2CSet (Atom v)     = [[LP v]]
 cnf2CSet (Neg (Atom v)) = [[LN v]]
 cnf2CSet (a `Conj` b) = (cnf2CSet a) ++ (cnf2CSet b)
-cnf2CSet (a `Disy` b) = (f2ArrayL a) : [(f2ArrayL b)]
+cnf2CSet (a `Disy` b) = (aux a) : [(aux b)]
 
-f2ArrayL :: F -> [L]
-f2ArrayL (Atom v) = [LP v]
-f2ArrayL (Neg (Atom v)) = [LN v]
-f2ArrayL (a `Disy` b) = removeDupes((aux a) ++ (aux b))
+aux :: F -> [L]
+aux (Atom v) = [LP v]
+aux (Neg (Atom v)) = [LN v]
+aux (a `Disy` b) = (aux a) ++ (aux b)
 
-removeDupes :: (Eq a) => [a] -> [a]
-removeDupes (x:xs) = x : removeDupes (filter (/= x) xs)
-removeDupes [] = [] 
+lim :: [L] -> [L]
+lim (x:xs) = x : lim (filter (/= x) xs)
+
+--lim :: [C] -> [C]
+--lim = 
 
 --  ((Atom "p") `Disy` ((Atom "q") `Disy` (Atom "r")))
 -- Pos: convierte una formula a FNC
@@ -97,11 +99,23 @@ distr a            = a
 -- Pos: si es SAT,   retorna el conjunto de clausulas saturado
 --      si es UNSAT, retorna un conjunto de clausulas incluyendo la clausula vacía
 resolveCSet :: CSet -> CSet
-resolveCSet = undefined
-               
+resolveCSet [] = []
+resolveCSet [a] = [a]
+--resolveCSet c1:c2:xs = case
+
+CvsCSet :: C -> CSet -> CSet
+CvsCSet c [] = []
+CvsCSet c [a] = resolveClash(c , (literal en conflicto de c) , a , (literal en conflicto de a))
+CvsCSet c x:xs = case (litToClash c x) of { LP "" -> (CvsCSet c xs) ; alfa -> (resolveClash (c , alfa ,  x, alfaNegado) ) : (CvsCSet c xs) }
+
+---esta funcion agarra dos clausulas y devuelve LP "" si no hay ningun literal en conflicto, si lo hay devuelve el literal en conflicto del de la izq
+litToClash :: C -> C -> L
+litToClash= undefined
+
+                
 -- Pos: retorna la resolvente de un conflicto
 resolveClash :: Clash -> C
-resolveClash = undefined
+resolveClash (c1 , l1 , c2 , l2) = (delete l1 c1) ++ (delete l2 c2)
 
 
 ----------------------------------------------------------------------------------
@@ -117,4 +131,3 @@ instance Show F where
   
 instance Show L where  
   show (LP v)  = "~" ++ v
-  show (LN v)  = v  

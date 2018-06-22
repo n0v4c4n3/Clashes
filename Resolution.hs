@@ -91,7 +91,7 @@ distr (a `Disy` b) = distr' ((distr a) `Disy` (distr b))
 distr (a `Conj` b) = (distr a) `Conj` (distr b)
 distr a            = a  
 
-
+--github me complica la vida
 -----------------------------------------
 -- Procedimiento de Resolución
 -----------------------------------------

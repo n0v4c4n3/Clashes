@@ -25,7 +25,7 @@ type Clash = (C,L,C,L)
 -----------------------------------------
 -- Pos: retorna True si la formula es SAT, o False si es UNSAT
 sat :: F -> Bool
-sat f = undefined
+sat f = resolveCSet (f2CSet f) contiene el vacio es unsat, retorno false
 
 -- Pos: retorna True si la formula es Tautología, o False en caso contrario
 tau :: F -> Bool
@@ -98,11 +98,14 @@ distr a            = a
 --      si es UNSAT, retorna un conjunto de clausulas incluyendo la clausula vacía
 resolveCSet :: CSet -> CSet
 resolveCSet [] = []
---resolveCSet (c1:c2:cs) = resolveClash(hasClash c1 c2) : resolveCSet cs
+resolveCSet (c1:c2:cs) = case ((hasClash c1 c2) == LP "") of { True -> resolveCSet (c1:cs);    
+                                                               False -> }
+
+-- resolveClash( ) : resolveCSet cs
 
 hasClash :: C -> C -> L
 hasClash (l1:l1s) (l2:l2s) = case (or ( map (== (opuesto l1)) (l2:l2s))) of { True -> l1 ;    
-                                                                        False -> hasClash (l1s) (l2:l2s)}
+                                                                              False -> hasClash (l1s) (l2:l2s)}
 hasClash [] ls = LP ""
 
 opuesto :: L -> L 

@@ -28,11 +28,12 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   
   -- Pos: retorna True si la formula es Tautología, o False en caso contrario
   tau :: F -> Bool
-  tau = undefined
+  tau f = not (sat f)
   
   -- Pos: retorna True si el razonamiento es válido, o False en caso contrario
   valid :: Statement -> Bool
-  valid = undefined
+  valid ([],conclusion) = sat conclusion
+  valid ((premisa:premisas),conclusion) = sat premisa && valid (premisas, conclusion)
   
   -----------------------------------------
   -- Formulas y Clausulas

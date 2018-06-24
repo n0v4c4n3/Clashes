@@ -32,7 +32,7 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   
   -- Pos: retorna True si el razonamiento es válido, o False en caso contrario
   valid :: Statement -> Bool
-  valid ([],conclusion) = sat conclusion
+  valid ([],conclusion) = not (sat conclusion)
   valid ((premisa:premisas),conclusion) = sat premisa && valid (premisas, conclusion)
   
   -----------------------------------------

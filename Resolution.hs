@@ -24,7 +24,7 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   -----------------------------------------
   -- Pos: retorna True si la formula es SAT, o False si es UNSAT
   sat :: F -> Bool
-  sat f = resolveCSet (f2CSet f) contiene el vacio es unsat, retorno false
+  sat f = not (hasEmtpyCSet (resolveCSet (f2CSet f))) --contiene el vacio es unsat, retorno false
   
   -- Pos: retorna True si la formula es Tautología, o False en caso contrario
   tau :: F -> Bool
@@ -97,8 +97,9 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   --      si es UNSAT, retorna un conjunto de clausulas incluyendo la clausula vacía
   resolveCSet :: CSet -> CSet
   resolveCSet [] = []
-  resolveCSet (c1:c2:cs) = case ((hasClash c1 c2) == LP "") of { True -> resolveCSet (c1:cs);    
-                                                                 False -> }
+  resolveCSet [c] = [c]
+  resolveCSet (c1:c2:cs) = (resolveCSet (c2:cs)) ++ (c2CSet c1 (c2:cs))
+  --case (hasClash c1 c2) of { LP "" -> (resolveCSet (c1:cs)) ; False -> a}
   
   hasClash :: C -> C -> L
   hasClash [] ls = LP ""
@@ -109,16 +110,25 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   opuesto (LP v) = LN v
   opuesto (LN v) = LP v
   
-  CvsCSet :: C -> CSet -> CSet
-  CvsCSet c [] = []
-  CvsCSet c [a] = resolveClash(c , (literal en conflicto de c) , a , (literal en conflicto de a))
-  CvsCSet c x:xs = case (litToClash c x) of { LP "" -> (CvsCSet c xs) ; alfa -> (resolveClash (c , alfa ,  x, alfaNegado) ) : (CvsCSet c xs) }
+  c2CSet :: C -> CSet -> CSet
+  c2CSet c [] = []
+  -- c2CSet c [a] = [resolveClash(c , (hasClash c a) , a , (opuesto (hasClash c a)))]
+  c2CSet c (x:xs) = (resolveClash (c , (hasClash c x) , x , (opuesto (hasClash c x)))) : (c2CSet c xs)
+  --case (litToClash c x) of { LP "" -> (c2CSet c xs) ; alfa -> (resolveClash (c , alfa ,  x, (opuesto alfa)) ) : (c2CSet c xs) }
 
   -- Pos: retorna la resolvente de un conflicto
   resolveClash :: Clash -> C
   resolveClash (c1, l1, c2, l2) = removeDupes ((delete l1 c1) ++ (delete l2 c2))
   
   -- resolveClash ([LP "p" , LP "q"] , (LP "p") , [LP "q" , LN "p"] , (LN "p") )
+
+  hasEmtpyCSet :: CSet -> Bool
+  hasEmtpyCSet [] = False
+  hasEmtpyCSet (x:xs) = (hasEmtpyC x) || (hasEmtpyCSet xs)
+
+  hasEmtpyC :: C -> Bool
+  hasEmtpyC [] = False
+  hasEmtpyC (l:ls) = (l == (LP "")) || (hasEmtpyC ls)
   ----------------------------------------------------------------------------------
   -- Pretty Printing
   instance Show F where

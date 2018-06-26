@@ -1,4 +1,5 @@
 module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) where
+  import Prelude
   import Data.List
   -----------------------------------------
   -- Tipos de datos
@@ -102,9 +103,9 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   resolveCSet (c1:c2:cs) = (resolveCSet (c2:cs)) ++ (c2CSet c1 (c2:cs))
   --case (hasClash c1 c2) of { LP "" -> (resolveCSet (c1:cs)) ; False -> a}
   
-  hasClash :: C -> C -> L
-  hasClash [] ls = LP ""
-  hasClash (l1:l1s) (l2:l2s) = case (or ( map (== (opuesto l1)) (l2:l2s))) of { True -> l1 ;    
+  hasClash :: C -> C -> Maybe L
+  hasClash [] ls = Nothing
+  hasClash (l1:l1s) (l2:l2s) = case (or ( map (== (opuesto l1)) (l2:l2s))) of { True -> Just l1 ;    
                                                                                 False -> hasClash (l1s) (l2:l2s)}
 
   opuesto :: L -> L 
@@ -113,9 +114,9 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   
   c2CSet :: C -> CSet -> CSet
   c2CSet c [] = []
-  -- c2CSet c [a] = [resolveClash(c , (hasClash c a) , a , (opuesto (hasClash c a)))]
-  c2CSet c (x:xs) = (resolveClash (c , (hasClash c x) , x , (opuesto (hasClash c x)))) : (c2CSet c xs)
-  --case (litToClash c x) of { LP "" -> (c2CSet c xs) ; alfa -> (resolveClash (c , alfa ,  x, (opuesto alfa)) ) : (c2CSet c xs) }
+  c2CSet c (x:xs) = case (hasClash c x) of { Nothing -> c2CSet c xs;
+                                             Just z -> [(resolveClash (c , z , x , (opuesto z)))] ++ (c2CSet c xs)
+  }
 
   -- Pos: retorna la resolvente de un conflicto
   resolveClash :: Clash -> C

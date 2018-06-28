@@ -26,7 +26,7 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   -- Pos: retorna True si la formula es SAT, o False si es UNSAT
   sat :: F -> Bool
   sat f = not (elem [] (resolveCSet (f2CSet f))) --contiene el vacio es unsat, retorno false
-  --resolveCSet (f2CSet ((Atom "p") `Conj` (Neg (Atom "p"))))
+
   -- Pos: retorna True si la formula es Tautología, o False en caso contrario
   tau :: F -> Bool
   tau f = not (sat (Neg f))
@@ -56,7 +56,6 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   f2ArrayL (Neg (Atom v)) = [LN v]
   f2ArrayL (a `Disy` b) = (f2ArrayL a) ++ (f2ArrayL b)
   
-  --  ((Atom "p") `Disy` ((Atom "q") `Disy` (Atom "r")))
   -- Pos: convierte una formula a FNC
   f2cnf :: F -> F
   f2cnf = distr . pushNeg . sustImp

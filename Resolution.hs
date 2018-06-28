@@ -33,8 +33,9 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   
   -- Pos: retorna True si el razonamiento es válido, o False en caso contrario
   valid :: Statement -> Bool
-  valid ([],conclusion) = not (sat conclusion)
-  valid ((premisa:premisas),conclusion) = sat premisa && valid (premisas, conclusion)
+  valid (a , c) = sat ( (Neg c) : a)
+  --valid ([],conclusion) = not (sat conclusion)
+  --valid ((premisa:premisas),conclusion) = sat premisa && valid (premisas, conclusion)
   
   -----------------------------------------
   -- Formulas y Clausulas
@@ -93,12 +94,12 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   -- Pos: si es SAT,   retorna el conjunto de clausulas saturado
   --      si es UNSAT, retorna un conjunto de clausulas incluyendo la clausula vacía
   resolveCSet :: CSet -> CSet
-  resolveCSet [] = [[]]
+  resolveCSet [] = []
   resolveCSet c = let aux = resolveClashes c in 
                        if (length c == length aux) then
                         c
                        else
-                        resolveCSet aux
+                        c ++ (resolveCSet aux)
 
   resolveClashes :: CSet -> CSet
   resolveClashes [] = []

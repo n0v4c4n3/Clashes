@@ -26,7 +26,7 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   -- Pos: retorna True si la formula es SAT, o False si es UNSAT
   sat :: F -> Bool
   sat f = not (elem [] (resolveCSet (f2CSet f))) --contiene el vacio es unsat, retorno false
-  
+  --resolveCSet (f2CSet ((Atom "p") `Conj` (Neg (Atom "p"))))
   -- Pos: retorna True si la formula es Tautología, o False en caso contrario
   tau :: F -> Bool
   tau f = not (sat (Neg f))
@@ -103,8 +103,7 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
 
   resolveClashes :: CSet -> CSet
   resolveClashes [] = []
-  resolveClashes [c] = []
-  resolveClashes (c1:c2:cs) = (c2CSet c1 (c2:cs)) ++ (resolveClashes (c2:cs)) 
+  resolveClashes (c:cs) = (c2CSet c cs) ++ (resolveClashes cs) 
 
   hasClash :: C -> C -> Maybe L
   hasClash [] ls = Nothing
@@ -132,16 +131,15 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   c2CSet c [] = []
   c2CSet c (x:xs) = case (hasClash c x) of { Nothing -> c2CSet c xs;
                                              Just z -> case (resolveClash (c , z , x , (compl z))) of 
-                                              { r -> case (or (map (compareList r) (x:xs) )) of 
-                                              { True -> (c2CSet c xs) ; False -> [r] ++ (c2CSet c xs)}}
-                                             --just z -> case (Or (map (compareList (resolveClash (c , z , x , (compl z)))) (x:xs) ) of { r -> [r] ++ (c2CSet c xs)}
-  }
+                                                            { r -> case (or (map (compareList r) (x:xs) )) of 
+                                                                        { True -> (c2CSet c xs) ; False -> [r] ++ (c2CSet c xs)}}}
 
   -- Pos: retorna la resolvente de un conflicto
   resolveClash :: Clash -> C
   resolveClash (c1, l1, c2, l2) = removeDupes ((delete l1 c1) ++ (delete l2 c2))
   
   -- resolveClash ([LP "p" , LP "q"] , (LP "p") , [LP "q" , LN "p"] , (LN "p") )
+  -- resolveClash ([LP "q" , LN "q"] , (LP "q") , [LP "q" , LN "q"] , (LN "q") )
 
   hasEmtpyCSet :: CSet -> Bool
   hasEmtpyCSet [] = False

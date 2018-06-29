@@ -1,4 +1,4 @@
-module Resolution where
+module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) where
   import Prelude
   import Data.List
   -----------------------------------------
@@ -34,10 +34,7 @@ module Resolution where
   -- Pos: retorna True si el razonamiento es válido, o False en caso contrario
   valid :: Statement -> Bool
   valid (a , c) = (elem [] (resolveCSet ( concat (map f2CSet ((Neg c) : a)))))
-  --valid ([],conclusion) = not (sat conclusion)
-  --valid ((premisa:premisas),conclusion) = sat premisa && valid (premisas, conclusion)
-  stat2CSet :: Statement -> CSet
-  stat2CSet (a , c) = concat (map f2CSet ((Neg c) : a))
+ 
   -----------------------------------------
   -- Formulas y Clausulas
   -----------------------------------------
@@ -92,73 +89,69 @@ module Resolution where
   -- Procedimiento de Resolución
   -----------------------------------------
   -- Pre: recibe un conjunto de clausulas
-  -- Pos: si es SAT,   retorna el conjunto de clausulas saturado
+  -- Pos: si es SAT, retorna el conjunto de clausulas saturado
   --      si es UNSAT, retorna un conjunto de clausulas incluyendo la clausula vacía
   resolveCSet :: CSet -> CSet
   resolveCSet [] = []
-  resolveCSet c = let aux = limpiarCSet ((resolveClashes c) ++ c) in 
+  resolveCSet c = let aux = removeDupesCSet ((resolveClashes c) ++ c) in 
                        if (length c == length aux) then
                         c
                        else
                         (resolveCSet (aux))
-
+  
+  -- Pre: recibe un conjunto de clausulas
+  -- Pos: retorna las resolventes de las clausulas
   resolveClashes :: CSet -> CSet
   resolveClashes [a] = [a]
   resolveClashes (c:cs) = (c2CSet c (c:cs)) ++ (resolveClashes cs) 
 
+  -- Pre: recibe dos clasulas
+  -- Pos: si hay clash, retorna un Just con el literal conflictivo
+  --      si no hay clash, retorna Nothing
   hasClash :: C -> C -> Maybe L
   hasClash [] [] = Nothing
   hasClash [] ls = Nothing
   hasClash ls [] = Nothing
   hasClash (l1:l1s) (l2:l2s) = case (or ( map (== (compl l1)) (l2:l2s))) of { True -> Just l1 ;    
                                                                               False -> hasClash (l1s) (l2:l2s)}
-
+  
+  -- Pre: recibe un literal
+  -- Pos: retorna el literal opuesto
   compl :: L -> L 
   compl (LP v) = LN v
   compl (LN v) = LP v
   
-  --sameElems :: (Eq a) => [a] -> [a] -> Bool
-  --sameElems [] cs2 = False
-  --sameElems ( c:cs1 ) cs2 = (or ( map (compareList [c]) [cs2])) && (sameElems cs1 cs2)
-  
-  compareList :: (Eq a) => [a] -> [a] -> Bool
-  compareList [] [] = True
-  compareList a1 a2 = case ((length a1)==(length a2)) of { True -> ( compareList (delete (head a1) a1)  (delete (head a1) a2) ) ; False -> False }
-  --compareList [] ls = True
-  --compareList [a] ls = elem a ls
-  --compareList (x:xs) ls = ( (elem x ls)) && (compareList xs ls)
+  -- Pre: recibe dos listas cualquiera
+  -- Post: si son iguales, retorna True
+  --       si no son iguales, retorna False
+  sameElems :: (Eq a) => [a] -> [a] -> Bool
+  sameElems [] [] = True
+  sameElems a1 a2 = case ((length a1)==(length a2)) of { True -> ( sameElems (delete (head a1) a1)  (delete (head a1) a2) ) ; False -> False }
 
+  -- Pre: recibe una lista cualquiera
+  -- Post: remueve duplicados
   removeDupes :: (Eq a) => [a] -> [a]
   removeDupes [] = [] 
   removeDupes (x:xs) = x : removeDupes (filter (/= x) xs)
 
-  limpiarCSet :: CSet -> CSet
-  limpiarCSet [] = [] 
-  limpiarCSet (x:xs) = (nubBy (compareList ) (x:xs)) 
-  --limpiarCSet (x:xs) = x : limpiarCSet (filter (compareList x) xs)
+  -- Pre: recibe una lista de clausulas
+  -- Post: retorna la lista sin duplicados en cualquier orden
+  removeDupesCSet :: CSet -> CSet
+  removeDupesCSet [] = [] 
+  removeDupesCSet (x:xs) = (nubBy (sameElems ) (x:xs)) 
 
-  filterNot :: (a -> Bool) -> [a] -> [a]
-  filterNot pred = filter $ not . pred
-
+  -- Pre: recibe una clausula y una lista de clausulas
+  -- Post: retorna todas las resolventes posibles de los conflictos
   c2CSet :: C -> CSet -> CSet
   c2CSet c [] = []
   c2CSet c (x:xs) = case (hasClash c x) of { Nothing -> c2CSet c xs;
                                              Just z -> [(resolveClash (c , z , x , (compl z)))] ++ (c2CSet c xs)}
-
+  
+  -- Pre: recibe un conflico
   -- Pos: retorna la resolvente de un conflicto
   resolveClash :: Clash -> C
   resolveClash (c1, l1, c2, l2) = removeDupes ((delete l1 c1) ++ (delete l2 c2))
-  
-  -- resolveClash ([LP "p" , LP "q"] , (LP "p") , [LP "q" , LN "p"] , (LN "p") )
-  -- resolveClash ([LP "q" , LN "q"] , (LP "q") , [LP "q" , LN "q"] , (LN "q") )
 
-  hasEmtpyCSet :: CSet -> Bool
-  hasEmtpyCSet [] = False
-  hasEmtpyCSet (x:xs) = (hasEmtpyC x) || (hasEmtpyCSet xs)
-
-  hasEmtpyC :: C -> Bool
-  hasEmtpyC [] = False
-  hasEmtpyC (l:ls) = (l == (LP "")) || (hasEmtpyC ls)
   ----------------------------------------------------------------------------------
   -- Pretty Printing
   instance Show F where

@@ -1,4 +1,5 @@
-
+-- Gabriel Martinez (188532)
+-- Mauricio Guala (196087)
 module Test where
 
 import Resolution

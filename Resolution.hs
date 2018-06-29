@@ -1,3 +1,5 @@
+-- Gabriel Martinez (188532)
+-- Mauricio Guala (196087)
 module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) where
   import Prelude
   import Data.List

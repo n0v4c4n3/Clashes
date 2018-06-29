@@ -1,4 +1,4 @@
-module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) where
+module Resolution (sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) where
   import Prelude
   import Data.List
   -----------------------------------------
@@ -33,10 +33,11 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   
   -- Pos: retorna True si el razonamiento es válido, o False en caso contrario
   valid :: Statement -> Bool
-  valid (a , c) = sat ( (Neg c) : a)
+  valid (a , c) = (elem [] (resolveCSet ( concat (map f2CSet ((Neg c) : a)))))
   --valid ([],conclusion) = not (sat conclusion)
   --valid ((premisa:premisas),conclusion) = sat premisa && valid (premisas, conclusion)
-  
+  stat2CSet :: Statement -> CSet
+  stat2CSet (a , c) = (resolveCSet ( concat (map f2CSet ((Neg c) : a))))	
   -----------------------------------------
   -- Formulas y Clausulas
   -----------------------------------------

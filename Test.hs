@@ -1,7 +1,7 @@
 -- Gabriel Martinez (188532)
 -- Mauricio Guala (196087)
-module Test where
 
+module Test where
 import Resolution
 import Test.HUnit  -- Acerca de HUnit: https://hackage.haskell.org/package/HUnit
 

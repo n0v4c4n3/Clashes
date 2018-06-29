@@ -1,4 +1,4 @@
-module Resolution (sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) where
+module Resolution where
   import Prelude
   import Data.List
   -----------------------------------------
@@ -15,7 +15,7 @@ module Resolution (sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) 
   type Statement = ([F],F)
   
   data L = LP V | LN V
-           deriving (Eq)
+           deriving (Eq, Ord)
   type C    = [L]
   type CSet = [C]
   type Clash = (C,L,C,L)
@@ -37,7 +37,7 @@ module Resolution (sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) 
   --valid ([],conclusion) = not (sat conclusion)
   --valid ((premisa:premisas),conclusion) = sat premisa && valid (premisas, conclusion)
   stat2CSet :: Statement -> CSet
-  stat2CSet (a , c) = (resolveCSet ( concat (map f2CSet ((Neg c) : a))))	
+  stat2CSet (a , c) = concat (map f2CSet ((Neg c) : a))
   -----------------------------------------
   -- Formulas y Clausulas
   -----------------------------------------
@@ -96,18 +96,20 @@ module Resolution (sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) 
   --      si es UNSAT, retorna un conjunto de clausulas incluyendo la clausula vacía
   resolveCSet :: CSet -> CSet
   resolveCSet [] = []
-  resolveCSet c = let aux = resolveClashes c in 
+  resolveCSet c = let aux = limpiarCSet ((resolveClashes c) ++ c) in 
                        if (length c == length aux) then
                         c
                        else
-                        c ++ (resolveCSet aux)
+                        (resolveCSet (aux))
 
   resolveClashes :: CSet -> CSet
-  resolveClashes [] = []
-  resolveClashes (c:cs) = (c2CSet c cs) ++ (resolveClashes cs) 
+  resolveClashes [a] = [a]
+  resolveClashes (c:cs) = (c2CSet c (c:cs)) ++ (resolveClashes cs) 
 
   hasClash :: C -> C -> Maybe L
+  hasClash [] [] = Nothing
   hasClash [] ls = Nothing
+  hasClash ls [] = Nothing
   hasClash (l1:l1s) (l2:l2s) = case (or ( map (== (compl l1)) (l2:l2s))) of { True -> Just l1 ;    
                                                                               False -> hasClash (l1s) (l2:l2s)}
 
@@ -115,25 +117,33 @@ module Resolution (sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) 
   compl (LP v) = LN v
   compl (LN v) = LP v
   
-  sameElems :: (Eq a) => [a] -> [a] -> Bool
-  sameElems [] cs2 = False
-  sameElems ( c:cs1 ) cs2 = ( and ( map (compareList [c]) [cs2])) && (sameElems cs1 cs2)
+  --sameElems :: (Eq a) => [a] -> [a] -> Bool
+  --sameElems [] cs2 = False
+  --sameElems ( c:cs1 ) cs2 = (or ( map (compareList [c]) [cs2])) && (sameElems cs1 cs2)
   
   compareList :: (Eq a) => [a] -> [a] -> Bool
-  compareList [] ls = False
-  compareList [a] ls = elem a ls
-  compareList (x:xs) ls = (elem x ls) && (compareList xs ls)
+  compareList [] [] = True
+  compareList a1 a2 = case ((length a1)==(length a2)) of { True -> ( compareList (delete (head a1) a1)  (delete (head a1) a2) ) ; False -> False }
+  --compareList [] ls = True
+  --compareList [a] ls = elem a ls
+  --compareList (x:xs) ls = ( (elem x ls)) && (compareList xs ls)
 
   removeDupes :: (Eq a) => [a] -> [a]
   removeDupes [] = [] 
   removeDupes (x:xs) = x : removeDupes (filter (/= x) xs)
 
+  limpiarCSet :: CSet -> CSet
+  limpiarCSet [] = [] 
+  limpiarCSet (x:xs) = (nubBy (compareList ) (x:xs)) 
+  --limpiarCSet (x:xs) = x : limpiarCSet (filter (compareList x) xs)
+
+  filterNot :: (a -> Bool) -> [a] -> [a]
+  filterNot pred = filter $ not . pred
+
   c2CSet :: C -> CSet -> CSet
   c2CSet c [] = []
   c2CSet c (x:xs) = case (hasClash c x) of { Nothing -> c2CSet c xs;
-                                             Just z -> case (resolveClash (c , z , x , (compl z))) of 
-                                                            { r -> case (or (map (compareList r) (x:xs) )) of 
-                                                                        { True -> (c2CSet c xs) ; False -> [r] ++ (c2CSet c xs)}}}
+                                             Just z -> [(resolveClash (c , z , x , (compl z)))] ++ (c2CSet c xs)}
 
   -- Pos: retorna la resolvente de un conflicto
   resolveClash :: Clash -> C

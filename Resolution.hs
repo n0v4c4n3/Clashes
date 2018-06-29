@@ -17,7 +17,7 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   type Statement = ([F],F)
   
   data L = LP V | LN V
-           deriving (Eq, Ord)
+           deriving (Eq)
   type C    = [L]
   type CSet = [C]
   type Clash = (C,L,C,L)
@@ -25,6 +25,7 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   -----------------------------------------
   -- Funciones principales
   -----------------------------------------
+
   -- Pos: retorna True si la formula es SAT, o False si es UNSAT
   sat :: F -> Bool
   sat f = not (elem [] (resolveCSet (f2CSet f))) --contiene el vacio es unsat, retorno false
@@ -40,6 +41,7 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   -----------------------------------------
   -- Formulas y Clausulas
   -----------------------------------------
+
   -- Pos: convierte una formula a un conjunto de clausulas
   f2CSet :: F -> CSet
   f2CSet f = cnf2CSet (f2cnf f)
@@ -52,6 +54,7 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   cnf2CSet (a `Conj` b) = (cnf2CSet a) ++ (cnf2CSet b)
   cnf2CSet (a `Disy` b) = [removeDupes ((f2ArrayL a) ++ (f2ArrayL b))]
   
+  -- Pos: convierte una formula a una lista de literales
   f2ArrayL :: F -> [L]
   f2ArrayL (Atom v) = [LP v]
   f2ArrayL (Neg (Atom v)) = [LN v]
@@ -90,6 +93,7 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   -----------------------------------------
   -- Procedimiento de Resolución
   -----------------------------------------
+
   -- Pre: recibe un conjunto de clausulas
   -- Pos: si es SAT, retorna el conjunto de clausulas saturado
   --      si es UNSAT, retorna un conjunto de clausulas incluyendo la clausula vacía
@@ -123,14 +127,14 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   compl (LP v) = LN v
   compl (LN v) = LP v
   
-  -- Pre: recibe dos listas cualquiera
+  -- Pre: recibe dos listas cualquiera comparables
   -- Post: si son iguales, retorna True
   --       si no son iguales, retorna False
   sameElems :: (Eq a) => [a] -> [a] -> Bool
   sameElems [] [] = True
   sameElems a1 a2 = case ((length a1)==(length a2)) of { True -> ( sameElems (delete (head a1) a1)  (delete (head a1) a2) ) ; False -> False }
 
-  -- Pre: recibe una lista cualquiera
+  -- Pre: recibe una lista cualquiera comparables
   -- Post: remueve duplicados
   removeDupes :: (Eq a) => [a] -> [a]
   removeDupes [] = [] 
@@ -143,7 +147,7 @@ module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) w
   removeDupesCSet (x:xs) = (nubBy (sameElems ) (x:xs)) 
 
   -- Pre: recibe una clausula y una lista de clausulas
-  -- Post: retorna todas las resolventes posibles de los conflictos
+  -- Post: retorna todas las resolventes posibles de los conflictos entre la clausula y la lista
   c2CSet :: C -> CSet -> CSet
   c2CSet c [] = []
   c2CSet c (x:xs) = case (hasClash c x) of { Nothing -> c2CSet c xs;

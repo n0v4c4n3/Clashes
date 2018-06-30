@@ -1,5 +1,6 @@
 -- Gabriel Martinez (188532)
 -- Mauricio Guala (196087)
+
 module Resolution(sat, tau, valid, V, F(..), Statement, L(..), C, CSet, Clash) where
 import Prelude
 import Data.List
@@ -91,7 +92,6 @@ distr (a `Disy` b) = distr' ((distr a) `Disy` (distr b))
 distr (a `Conj` b) = (distr a) `Conj` (distr b)
 distr a            = a  
 
-
 -----------------------------------------
 -- Procedimiento de Resolucion
 -----------------------------------------
@@ -120,7 +120,7 @@ hasClash :: C -> C -> Maybe L
 hasClash [] [] = Nothing
 hasClash [] ls = Nothing
 hasClash ls [] = Nothing
-hasClash (l1:l1s) (l2:l2s) = case (or ( map (== (compl l1)) (l2:l2s))) of { True -> Just l1 ;    
+hasClash (l1:l1s) (l2:l2s) = case (or ( map (== (compl l1)) (l2:l2s))) of { True -> Just l1;    
                                                                             False -> hasClash (l1s) (l2:l2s)}
 
 -- Pre: recibe un literal
@@ -130,25 +130,26 @@ compl (LP v) = LN v
 compl (LN v) = LP v
 
 -- Pre: recibe dos listas cualquiera comparables
--- Post: si son iguales, retorna True
+-- Pos: si son iguales, retorna True
 --       si no son iguales, retorna False
 sameElems :: (Eq a) => [a] -> [a] -> Bool
 sameElems [] [] = True
-sameElems a1 a2 = case ((length a1)==(length a2)) of { True -> ( sameElems (delete (head a1) a1)  (delete (head a1) a2) ) ; False -> False }
+sameElems a1 a2 = case ((length a1)==(length a2)) of { True -> ( sameElems (delete (head a1) a1)  (delete (head a1) a2) ); 
+                                                       False -> False }
 
 -- Pre: recibe una lista cualquiera comparables
--- Post: remueve duplicados
+-- Pos: remueve duplicados
 removeDupes :: (Eq a) => [a] -> [a]
 removeDupes [] = [] 
 removeDupes (x:xs) = x : removeDupes (filter (/= x) xs)
 
 -- Pre: recibe una lista de clausulas
--- Post: retorna la lista sin duplicados considerando el orden
+-- Pos: retorna la lista sin duplicados considerando el orden
 removeDupesCSet :: CSet -> CSet
 removeDupesCSet cs = (nubBy (sameElems) cs) 
 
 -- Pre: recibe una clausula y una lista de clausulas
--- Post: retorna todas las resolventes posibles de los conflictos entre la clausula y la lista
+-- Pos: retorna todas las resolventes posibles de los conflictos entre la clausula y la lista
 c2CSet :: C -> CSet -> CSet
 c2CSet c [] = []
 c2CSet c (x:xs) = case (hasClash c x) of { Nothing -> c2CSet c xs;

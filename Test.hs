@@ -32,7 +32,6 @@ inv1_val_should_be_false = TestCase (assertEqual "valid inv1" False (valid inv1)
 inv2_val_should_be_false = TestCase (assertEqual "valid inv2" False (valid inv2))
 inv3_val_should_be_false = TestCase (assertEqual "valid inv3" False (valid inv3))
 
-
 satTests = [TestLabel "Tautologia 1"    tau1_sat_should_be_true, 
             TestLabel "Tautologia 2"    tau2_sat_should_be_true,
             TestLabel "Tautologia 3"    tau3_sat_should_be_true,
@@ -62,7 +61,6 @@ valTests = [TestLabel "Razonamiento valido 1" val1_val_should_be_true,
 
 allTests = TestList $ satTests ++ tauTests ++ valTests                    
 
-
 -- razonamiento valido    
 val1 = ([], (Atom "q") `Imp` (Atom "q"))
 val2 = ([((Atom "q") `Conj` (Atom "r")) `Imp` (Atom "p"), (Neg (Atom "q")) `Disy` (Atom "r"), Atom "q"],  (Atom "p") `Conj` (Atom "q"))
@@ -87,7 +85,6 @@ ind3 = (((Atom "s") `Imp` (Atom "r")) `Disy` ((Atom "q") `Imp` (Neg (Atom "r")))
 con1 = false
 con2 = true `Imp` false
 con3 = false `Conj` ((Atom "q") `Disy` (Neg (Atom "q")))
-
 
 -- Bottom y Top definidas como abreviaciones sintacticas en el lenguaje L
 false = (Atom "p") `Conj` (Neg (Atom "p"))
